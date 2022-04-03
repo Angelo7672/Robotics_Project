@@ -36,7 +36,7 @@
 
 #CMake
 cmake-build-debug/
-CMakeLists.txt.user
+CMakeLists.txt
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
