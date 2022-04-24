@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "/Velocities.h"
 
 #include <sstream>
 
@@ -10,25 +11,31 @@
 #define ENCODERS_RESOLUTION 42
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "kinematics");  //per inizializzare il nodo
-    ros::NodeHandle n;    //per inizializzare il nodo
-
-    ros::Publisher kinematics = n.subscribe("", 1000, ...Callback);    //da dove arrivano i dati
-
-
     float u_1;
     float u_2;
     float u_3;
     float u_4;
-
-
     float v_x;
     float v_y;
-    float w_z;
+    float w;
+
+    ros::init(argc, argv, "kinematics");  //per inizializzare il nodo
+    ros::NodeHandle n;    //per inizializzare il nodo
+
+    ros::Publisher kinematics = n.advertise<::Velocities>("velocities", 1000);
+
+    u_1 = * (1/60) * (1/GEAR_RATIO);
+    u_2 = * (1/60) * (1/GEAR_RATIO);
+    u_3 = * (1/60) * (1/GEAR_RATIO);
+    u_4 = * (1/60) * (1/GEAR_RATIO);
+
+
+
+
 
     v_x = (WHEEL_RADIUS / 2) * (u_1 + u_2);
     v_y = (WHEEL_RADIUS / 2) * (u_2 - u_3);
-    w_z = -(WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
+    w = -(WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
 
     ros::Rate loop_rate(10);
 
@@ -38,14 +45,13 @@ int main(int argc, char **argv) {
 
         std::stringstream ss;
 
-        ss << " v_x";
-        msg.data = ss.str();
+        // generate  msg
+        ::Velocities velocities_msg;
+        velocities_msg.v_x = v_x;
+        velocities_msg.v_y = v_y;
+        velocities_msg.w = w;
 
-        ss << " v_y";
-        msg.data = ss.str();
 
-        ss << " w_x";
-        msg.data = ss.str();
 
 
         kinematics.publish(msg);
@@ -61,6 +67,3 @@ int main(int argc, char **argv) {
 
 }
 
-void ...Callback(const std_msgs::String::ConstPtr& msg) {   //funzione per i dati
-
-}
