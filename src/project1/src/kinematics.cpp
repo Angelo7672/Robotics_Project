@@ -11,98 +11,45 @@
 #define GEAR_RATIO 5
 #define ENCODERS_RESOLUTION 42
 
-void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
-    //kinematics(msg->velocity[0],msg->velocity[1],msg->velocity[2],msg->velocity[3],msg->header.time.sec,msg->header.time.nsec);
-    kinematics(msg->position[0],msg->position[1],msg->position[2],msg->position[3],msg->header.time.sec,msg->header.time.nsec);
-
-}
 class kinematics_tick{
 public:
-        kinematicsTick(){
-            this->front_left_ticks;
-            this->front_right_ticks;
-            this->rear_left_ticks;
-            this->rear_right_ticks;
-        }
+    int seq;
+    string frame_id;
+    int time_sec;
+    int time_nsec;
+    float front_left_ticks;
+    float front_right_ticks;
+    float rear_left_ticks;
+    float rear_right_ticks;
 
-        void setfront_left(float ticks){
-            this->front_left_ticks=ticks;
-        }
-        void setfront_right(float ticks){
-            this->front_right_ticks=ticks;
-        }
+    kinematics_tick(){
+        this->time_sec = 0; //serve veramente? in odometry per il primo calcolo vanno iniz a zero
+        this->time_nsec = 0;
+    }
 
-        void setrear_left(float ticks){
-            this->rear_left_ticks=ticks;
-        }
+    void set_front_left(float ticks){ this->front_left_ticks = ticks; }
+    void set_front_right(float ticks){ this->front_right_ticks = ticks; }
+    void set_rear_left(float ticks){ this->rear_left_ticks = ticks; }
+    void set_rear_right(float ticks){ this->rear_right_ticks = ticks; }
+    void set_frame_id(string f_id){ this->frame_id = f_id; }
+    void set_time_sec(int sec){ this->time_sec = sec; }
+    void set_time_nsec(int nsec){ this->time_nsec=nsec; }
 
-
-        void setrear_right(float ticks){
-            this->rear_right_ticks=ticks;
-        }
-
-        float getfront_left_ticks(){
-            return this->front_left_ticks;
-        }
-        float getfront_right_ticks(){
-            return this->front_right_ticks;
-        }
-        float getrear_left_ticks(){
-            return this->rear_left_ticks;
-        }
-
-        float getrear_right_ticks(){
-            return this->rear_right_ticks;
-        }
-
-
-        string getframe_id(){
-            return this->frame_id;
-        }
-
-        int gettime_sec(){
-            return this->time_sec;
-        }
-
-        int gettime_nsec(){
-            return this->time_nsec;
-        }
-
-
-
-
-
-        void setframe_id(string f_id){
-            this->frame_id=f_id;
-        }
-
-        void settime_sec(int sec){
-            this->time_sec=sec;
-        }
-
-        void settime_nsec(int nsec){
-            this->time_nsec=nsec;
-        }
-
-        float front_left_ticks;
-        float front_right_ticks;
-        float rear_left_ticks;
-        float rear_right_ticks;
-
-        string frame_id;
-
-        int time_sec;
-        int time_nsec;
-        string
-
-
-
-
-
-
-
+    float get_front_left_ticks(){ return this->front_left_ticks; }
+    float get_front_right_ticks(){ return this->front_right_ticks; }
+    float get_rear_left_ticks(){ return this->rear_left_ticks; }
+    float get_rear_right_ticks(){ return this->rear_right_ticks; }
+    string get_frame_id(){ return this->frame_id; }
+    int get_time_sec(){ return this->time_sec; }
+    int get_time_nsec(){ return this->time_nsec; }
 }
-void kinematics(float front_left_velocity, float front_right_velocity, float rear_left_velocity, int rear_right_velocity, int time){
+
+void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
+    //kinematics(msg->velocity[0],msg->velocity[1],msg->velocity[2],msg->velocity[3],msg->header.time.sec,msg->header.time.nsec);
+    kinematics(msg->position[0],msg->position[1],msg->position[2],msg->position[3],msg->header.stamp.sec,msg->header.stamp.nsec,msg->header.frame_id,msg->header.seq);
+}
+
+void kinematics(float front_left_velocity, float front_right_velocity, float rear_left_velocity, float rear_right_velocity, int time_sec, int time_nsec, string frame_id,int seq){
     float u_1;
     float u_2;
     float u_3;
@@ -118,53 +65,43 @@ void kinematics(float front_left_velocity, float front_right_velocity, float rea
     u_3 = (rear_left_velocity - kinematics_tick::getrear_left_ticks())* (1/60) * (1/GEAR_RATIO) * (1/ENCODERS_RESOLUTION) * 2 * M_1_PI;
     u_4 = (rear_right_velocity - kinematics_tick::getrear_right_ticks())* (1/60) * (1/GEAR_RATIO) * (1/ENCODERS_RESOLUTION) * 2 * M_1_PI;
 
+    kinematics_tick::set_front_left(u_1);
+    kinematics_tick::set_front_right(u_2);
+    kinematics_tick::set_rear_left(u_3);
+    kinematics_tick::set_rear_right(u_4);
+    //set_seq
+    //set_frame_id
+    //set_timesec
+    //set_timensec
 
-    kinematics_tick::setfront_left(u_1);
-    kinematics_tick::setfront_right(u_2);
-    kinematics_tick::setrear_left(u_3);
-    kinematics_tick::setrear_right(u_4);
-
-
-
-
-
+    //fare check con dati matrice video
+    //forse servono degli if per queste formule
     v_x = (WHEEL_RADIUS / 2) * (u_1 + u_2);
     v_y = (WHEEL_RADIUS / 2) * (u_2 - u_3);
     w = - (WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
 
+    // generate  msg
+    geometry_msgs::TwistStamped velocities_msg;
 
-    ros::Rate loop_rate(10);    //10 Hz di frequenza
+    velocities_msg.header.seq = seq;
+    velocities_msg.header.frame_id = ;
+    velocities_msg.header.stamp.sec = ;
+    velocities_msg.header.stamp.nsec = ;
 
-    while (ros::ok()) {
+    velocities_msg.linear.x = v_x;
+    velocities_msg.linear.y = v_y;
+    velocities_msg.linear.z = 0;
+    velocities_msg.angular.x = 0;
+    velocities_msg.angular.y = 0;
+    velocities_msg.angular.z = w;
 
-        // generate  msg
-        geometry_msgs::TwistStamped velocities_msg;
-        velocities_msg.linear.x = v_x;
-        velocities_msg.linear.y = v_y;
-        velocities_msg.linear.z = 0;
-        velocities_msg.angular.x = 0;
-        velocities_msg.angular.y = 0;
-        velocities_msg.angular.z = w;
-
-        //time and frame_id
-
-        kinematics_pub.publish(velocities_msg);
-
-        ros::spinOnce();    //per dare il permesso a ROS, se c'e' qualcosa da fare prima di continuare con il main loop (da fare sempre se non c'e' il calcolo parallelo
-        loop_rate.sleep();  //per mantenere la frequenza
-    }
+    kinematics_pub.publish(velocities_msg);
 }
 
 int main(int argc, char **argv) {
-
+    kinematics_tick my_kinematics;
     ros::init(argc, argv, "kinematics");  //per inizializzare il nodo
     ros::NodeHandle n;                    //per inizializzare il nodo
-
-
-    kinematics_tick mykinematics;
-    mykinematics.settime_sec(0);
-    mykinematics.settime_nsec(0);
-
 
     ros::Subscriber kinematics_sub = n.subscribe("wheel_states", 1000, wheel_statesCallback);
 
