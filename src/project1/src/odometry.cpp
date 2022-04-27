@@ -1,10 +1,56 @@
 #include "ros/ros.h"
 #include "geometry_msgs/TwistStamped"
+#include <string>
+
 
 void cmd_velCallback(const geometry_msgs::TwistedStamped::ConstPtr& msg) {
     odometry();
 }
+class odometryClass(){
+    public:
 
+    odometryClass(){
+
+    }
+
+
+
+
+
+    long double evaluateT_s(int tsec, int tnsec, int t1sec, int t1nsec){
+        long double returnedValue;
+        returnedValue = ((long double) (t1sec - tsec)) + ((long double)(t1nsec - tnsec))/1000000000;
+        return returnedValue;
+    }
+
+
+
+
+
+
+
+    //velocita, tempo, frameid;
+
+    float v_x;
+    float v_y;
+    float w_z;
+
+    int t_k_sec;
+    int t_k1_sec;
+    int t_k_nsec;
+    int t_k1_nsec;
+
+
+
+
+
+
+
+
+    string frame_id;
+
+
+}
 void odometry(float v_x, float v_y, float w, float time){
 
 }
