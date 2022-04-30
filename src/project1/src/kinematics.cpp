@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "geometry_msgs/TwistStamped"
 #include "sensor_msgs/JointState"
+#include "std_msgs/Header"
 #include <cmath>
 #include <string>
 
@@ -21,16 +22,17 @@ public:
     float front_right_ticks;
     float rear_left_ticks;
     float rear_right_ticks;
+    bool first;
 
     kinematics_tick(){
-        this->time_sec = 0; //serve veramente? in odometry per il primo calcolo vanno iniz a zero
-        this->time_nsec = 0;
+        this->first = false;
     }
 
     void set_front_left(float ticks){ this->front_left_ticks = ticks; }
     void set_front_right(float ticks){ this->front_right_ticks = ticks; }
     void set_rear_left(float ticks){ this->rear_left_ticks = ticks; }
     void set_rear_right(float ticks){ this->rear_right_ticks = ticks; }
+    void set_seq(int seq){ this->seq = seq; }
     void set_frame_id(string f_id){ this->frame_id = f_id; }
     void set_time_sec(int sec){ this->time_sec = sec; }
     void set_time_nsec(int nsec){ this->time_nsec=nsec; }
@@ -39,17 +41,48 @@ public:
     float get_front_right_ticks(){ return this->front_right_ticks; }
     float get_rear_left_ticks(){ return this->rear_left_ticks; }
     float get_rear_right_ticks(){ return this->rear_right_ticks; }
+    int get_seq(){ return this->seq; }
     string get_frame_id(){ return this->frame_id; }
     int get_time_sec(){ return this->time_sec; }
     int get_time_nsec(){ return this->time_nsec; }
 }
 
 void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
-    //kinematics(msg->velocity[0],msg->velocity[1],msg->velocity[2],msg->velocity[3],msg->header.time.sec,msg->header.time.nsec);
-    kinematics(msg->position[0],msg->position[1],msg->position[2],msg->position[3],msg->header.stamp.sec,msg->header.stamp.nsec,msg->header.frame_id,msg->header.seq);
+    if(kinematics_tick::first) {
+        kinematics(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp.sec,msg->header.stamp.nsec, msg->header.frame_id, msg->header.seq);
+    } else {    //durante il primo giro perche' per calcolare la velocita' ci servono due misure
+        initialization(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp.sec,msg->header.stamp.nsec, msg->header.frame_id, msg->header.seq);
+    }
 }
 
-void kinematics(float front_left_velocity, float front_right_velocity, float rear_left_velocity, float rear_right_velocity, int time_sec, int time_nsec, string frame_id,int seq){
+void initialization(float front_left_velocity, float front_right_velocity, float rear_left_velocity, float rear_right_velocity, int time_sec, int time_nsec, string frame_id, int seq){
+    ros::Publisher first_pub = n.advertise<std_msgs::Header>("first", 1000);
+
+    //il primo giro mando solo header per inizializzare classi
+    // generate  msg
+    std_msgs::Header first_msg;
+
+    first_msg.seq = seq;
+    first_msg.frame_id = frame_id;
+    first_msg.stamp.sec = time_sec;
+    first_msg.stamp.nsec = time_nsec;
+
+    first_pub.publish(first_msg);
+
+    //aggiornamento dati
+    kinematics_tick::set_seq(seq);
+    kinematics_tick::set_frame_id(frame_id);
+    kinematics_tick::set_time_sec(time_sec);
+    kinematics_tick::set_time_nsec(time_nsec);
+    kinematics_tick::set_front_left(front_left_velocity);
+    kinematics_tick::set_front_right(front_right_velocity);
+    kinematics_tick::set_rear_left(rear_left_velocity);
+    kinematics_tick::set_rear_right(rear_right_velocity);
+
+    kinematics_tick::first = true;  //dopo il primo giro sara' sempre a true
+}
+
+void kinematics(float front_left_velocity, float front_right_velocity, float rear_left_velocity, float rear_right_velocity, int time_sec, int time_nsec, string frame_id, int seq){
     float u_1;
     float u_2;
     float u_3;
@@ -60,19 +93,10 @@ void kinematics(float front_left_velocity, float front_right_velocity, float rea
 
     ros::Publisher kinematics_pub = n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
 
-    u_1 = (front_left_velocity - kinematics_tick::getfront_left_ticks())* (1/60) * (1/GEAR_RATIO) * (1/ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_2 = (front_right_velocity - kinematics_tick::getfront_right_ticks() )* (1/60) * (1/GEAR_RATIO) * (1/ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_3 = (rear_left_velocity - kinematics_tick::getrear_left_ticks())* (1/60) * (1/GEAR_RATIO) * (1/ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_4 = (rear_right_velocity - kinematics_tick::getrear_right_ticks())* (1/60) * (1/GEAR_RATIO) * (1/ENCODERS_RESOLUTION) * 2 * M_1_PI;
-
-    kinematics_tick::set_front_left(u_1);
-    kinematics_tick::set_front_right(u_2);
-    kinematics_tick::set_rear_left(u_3);
-    kinematics_tick::set_rear_right(u_4);
-    //set_seq
-    //set_frame_id
-    //set_timesec
-    //set_timensec
+    u_1 = (front_left_velocity - kinematics_tick::getfront_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+    u_2 = (front_right_velocity - kinematics_tick::getfront_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+    u_3 = (rear_left_velocity - kinematics_tick::getrear_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+    u_4 = (rear_right_velocity - kinematics_tick::getrear_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
 
     //fare check con dati matrice video
     //forse servono degli if per queste formule
@@ -80,13 +104,23 @@ void kinematics(float front_left_velocity, float front_right_velocity, float rea
     v_y = (WHEEL_RADIUS / 2) * (u_2 - u_3);
     w = - (WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
 
+    //aggiornamento dati
+    kinematics_tick::set_front_left(front_left_velocity);
+    kinematics_tick::set_front_right(front_right_velocity);
+    kinematics_tick::set_rear_left(rear_left_velocity);
+    kinematics_tick::set_rear_right(rear_right_velocity);
+    kinematics_tick::set_seq(seq);
+    kinematics_tick::set_frame_id(frame_id);
+    kinematics_tick::set_time_sec(time_sec);
+    kinematics_tick::set_time_nsec(time_nsec);
+
     // generate  msg
     geometry_msgs::TwistStamped velocities_msg;
 
     velocities_msg.header.seq = seq;
-    velocities_msg.header.frame_id = ;
-    velocities_msg.header.stamp.sec = ;
-    velocities_msg.header.stamp.nsec = ;
+    velocities_msg.header.frame_id = frame_id;  ////frame_id lo cambiamo?
+    velocities_msg.header.stamp.sec = time_sec;
+    velocities_msg.header.stamp.nsec = time_nsec;
 
     velocities_msg.linear.x = v_x;
     velocities_msg.linear.y = v_y;
@@ -109,4 +143,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
