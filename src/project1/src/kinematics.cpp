@@ -13,7 +13,7 @@
 #define ENCODERS_RESOLUTION 42
 
 class kinematics_tick{
-public:
+private:
     int seq;
     string frame_id;
     int time_sec;
@@ -22,6 +22,7 @@ public:
     float front_right_ticks;
     float rear_left_ticks;
     float rear_right_ticks;
+public:
     bool first;
 
     kinematics_tick(){
@@ -45,7 +46,7 @@ public:
     string get_frame_id(){ return this->frame_id; }
     int get_time_sec(){ return this->time_sec; }
     int get_time_nsec(){ return this->time_nsec; }
-}
+};
 
 void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
     if(kinematics_tick::first) {
@@ -118,7 +119,7 @@ void kinematics(float front_left_velocity, float front_right_velocity, float rea
     geometry_msgs::TwistStamped velocities_msg;
 
     velocities_msg.header.seq = seq;
-    velocities_msg.header.frame_id = frame_id;  ////frame_id lo cambiamo?
+    velocities_msg.header.frame_id = frame_id;  //frame_id lo cambiamo?
     velocities_msg.header.stamp.sec = time_sec;
     velocities_msg.header.stamp.nsec = time_nsec;
 
