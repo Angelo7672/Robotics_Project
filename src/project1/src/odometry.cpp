@@ -1,32 +1,17 @@
 #include "ros/ros.h"
-#include "geometry_msgs/TwistStamped"
-#include "std_msgs/Header"
-#include "nav_msgs/Odometry"
+#include <geometry_msgs/TwistStamped.h>
+#include <std_msgs/Header.h>
+#include <nav_msgs/Odometry.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
 #include "project1/Reset.h"
-#include <string>
 #include <cmath>
 
-
-class odometry_class(){
-private:
-    ros::ServiceServer resetService;
-
-    int seq;
-    string frame_id;
-    int time_sec;
-    int time_nsec;
-    float x_k;
-    float y_k;
-    float theta_k;
+class odometry_class{
 public:
     odometry_class(){
         this-> resetService = this->n.advertiseService("reset", &odometry_class::reset_callback, this);
-    }
-
-    long double evaluate_Ts(int tsec, int tnsec){
-        long double returnedValue;
-        returnedValue = ((long double) (tsec - time_sec)) + ((long double)(tnsec - time_nsec))/1000000000;
-        return returnedValue;
     }
 
     bool reset_callback(project1::Reset::Request  &req,
@@ -38,88 +23,96 @@ public:
         this->y = req.new_y;
         this->theta = req.new_theta;
         ROS_INFO("Request to reset x to %f - Responding with x: %f\nRequest to reset y to %f - Responding with y: %f\nRequest to reset theta to %f - Responding with theta: %f",
-                 (float)req.new_x, (float )res.old_x,
-                 (float)req.new_y, (float )res.old_y,
-                 (float)req.new_theta, (float )res.old_theta);
+                 (double)req.new_x, (double)res.old_x,
+                 (double)req.new_y, (double)res.old_y,
+                 (double)req.new_theta, (double)res.old_theta);
         return true;
     }
 
-    void set_seq(int seq){ this->seq = seq; }
-    void set_frame_id(string f_id){ this->frame_id = f_id; }
-    void set_time_sec(int sec){ this->time_sec = sec; }
-    void set_time_nsec(int nsec){ this->time_nsec=nsec; }
-    void set_x_k(float x_k){ this->x_k = x_k; }
-    void set_y_k(float y_k){ this->y_k = y_k; }
-    void set_theta_k(float theta_k){ this->theta_k = theta_k; }
+    void set_last_time(ros::Time last_time){ this->last_time = last_time; }
+    void set_x_k(double x_k){ this->x_k = x_k; }
+    void set_y_k(double y_k){ this->y_k = y_k; }
+    void set_theta_k(double theta_k){ this->theta_k = theta_k; }
 
-    int get_seq(){ return this->seq; }
-    string get_frame_id(){ return this->frame_id; }
-    int get_time_sec(){ return this->time_sec; }
-    int get_time_nsec(){ return this->time_nsec; }
-    float get_x_k(){ return this->x_k; }
-    float get_y_k(){ return this->y_k; }
-    float get_theta_k(){ return this->theta_k; }
+    ros::Time get_last_time(){ return this->last_time; }
+    double get_x_k(){ return this->x_k; }
+    double get_y_k(){ return this->y_k; }
+    double get_theta_k(){ return this->theta_k; }
+
+private:
+    ros::ServiceServer resetService;
+
+    ros::Time last_time
+    double x_k;
+    double y_k;
+    double theta_k;
 };
 
 void first_Callback(const std_msgs::Header::ConstPtr& msg){ //inizializzazione classe odometry
-    odometry_class::set_seq(msg->seq);
-    odometry_class::set_frame_id(msg->frame_id);
-    odometry_class::set_time_sec(msg->stamp.sec);
-    odometry_class::set_time_nsec(msg->stamp.nsec);
+    odometry_class::set_last_time(msg->stamp);
 }
 
 void cmd_velCallback(const geometry_msgs::TwistedStamped::ConstPtr& msg) {
-    odometry(msg->header.seq,msg->header.frame_id,msg->header.stamp.sec,msg->header.stamp.nsec,msg->linear.x,msg->linear.y,msg->angular.z);
+    odometry(msg->header.stamp,msg->linear.x,msg->linear.y,msg->angular.z);
 }
 
-void odometry(int seq, string frame_id, int tsec, int tnsec, float v_x, float v_y, float w){
-    float x_k1;
-    float y_k1;
-    float theta_k1;
+void odometry(ros::Time time, float v_x, float v_y, float w){
+    double x_k1;
+    double y_k1;
+    double theta_k1;
+
+    tf2_ros::TransformBroadcaster br;
 
     ros::Publisher odometry_pub = n.advertise<nav_msgs::Odometry>("odom", 1000);
 
     //Euler integration
-    x_k1 = odometry_class::get_x_k + v_k * odometry_class::evaluate_Ts(tsec,tnsec) * cos(theta_k);  //angoli in radianti
-    y_k1 = odometry_class::get_y_k + v_k * odometry_class::evaluate_Ts(tsec,tnsec) * sen(theta_k);
-    theta_k1 = odometry_class::get_theta_k + w * odometry_class::evaluate_Ts(tsec,tnsec);
+    x_k1 = odometry_class::get_x_k + v_k * (time - odometry_class::get_last_time()).toSec() * cos(theta_k);  //angoli in radianti
+    y_k1 = odometry_class::get_y_k + v_k * (time - odometry_class::get_last_time()).toSec() * sen(theta_k);
+    theta_k1 = odometry_class::get_theta_k + w * (time - odometry_class::get_last_time()).toSec();
 
-    odometry_class::set_seq(seq);
-    odometry_class::set_frame_id(frame_id);
-    odometry_class::set_time_sec(tsec);
-    odometry_class::set_time_nsec(tnsec);
+    odometry_class::set_last_time(time);
     odometry_class::set_x_k(x_k1);
     odometry_class::set_y_k(y_k1);
     odomedry_class::set_theta_k(theta_k1);
 
     // generate  msg
+    geometry_msgs::TransformStamped transformStamped;
+    // set header
+    transformStamped.header.stamp = time;
+    transformStamped.header.frame_id = "odom";
+    transformStamped.child_frame_id = "base_link";
+    // set x,y
+    transformStamped.transform.translation.x = x_k1;
+    transformStamped.transform.translation.y = y_k1;
+    transformStamped.transform.translation.z = 0.0;
+    // set theta
+    tf2::Quaternion q;
+    q.setRPY(0, 0, theta_k1);
+    transformStamped.transform.rotation.x = q.x();
+    transformStamped.transform.rotation.y = q.y();
+    transformStamped.transform.rotation.z = q.z();
+    transformStamped.transform.rotation.w = q.w();
+    // send transform
+    br.sendTransform(transformStamped);
+
+
+    // generate  msg
     nav_msgs::Odometry odom_msg;
     //Header
-    odom_msg.header.seq = seq;
-    odom_msg.header.frame_id = frame_id;    //frame_id lo cambiamo?
-    odom_msg.header.stamp.sec = time_sec;
-    odom_msg.header.stamp.nsec = time_nsec;
+    odom_msg.header.frame_id = "odom";
+    odom_msg.header.stamp = time;
 
-    odom_msg.child_frame_id = "";
-    //PoseWithCovariance
+    //set the position
     odom_msg.pose.pose.position.x = x_k1;
     odom_msg.pose.pose.position.y = y_k1;
     odom_msg.pose.pose.position.z =  ;
-    odom_msg.pose.pose.orientation.x = ;
-    odom_msg.pose.pose.orientation.y = ;
-    odom_msg.pose.pose.orientation.z = ;
-    odom_msg.pose.pose.orientation.w = ;
-    for(int i = 0; i < 37; i++)
-        odom_msg.pose.covariance[i] = 0;
-    //TwistWithCovariance
+    odom_msg.pose.pose.orientation = transformStamped.transform.rotation;   //non sono sicuro
+
+    //set the velocity
+    odom_msg.child_frame_id = "base_link";
     odom_msg.twist.twist.linear.x = v_x;
     odom_msg.twist.twist.linear.y = v_y;
-    odom_msg.twist.twist.linear.z = 0;
-    odom_msg.twist.twist.angular.x = 0;
-    odom_msg.twist.twist.angular.y = 0;
     odom_msg.twist.twist.angular.z = w;
-    for(int i = 0; i < 37; i++)
-        odom_msg.twist.covariance[i] = 0;
 
     odometry_pub.publish(odom_msg);
 }
