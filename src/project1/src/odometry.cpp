@@ -12,6 +12,7 @@ class odometry_class{
 public:
     odometry_class(){
         this-> resetService = this->n.advertiseService("reset", &odometry_class::reset_callback, this);
+        this-> odometry_pub = this->n.advertise<nav_msgs::Odometry>("odom", 1000);
     }
 
     bool reset_callback(project1::Reset::Request  &req,
@@ -29,6 +30,14 @@ public:
         return true;
     }
 
+    void transformation(geometry_msgs::TransformStamped transformStamped){
+        br.sendTransform(transformStamped);
+    }
+
+    void pub(nav_msgs::Odometry odom_msg){
+        odometry_pub.publish(odom_msg);
+    }
+
     void set_last_time(ros::Time last_time){ this->last_time = last_time; }
     void set_x_k(double x_k){ this->x_k = x_k; }
     void set_y_k(double y_k){ this->y_k = y_k; }
@@ -42,13 +51,17 @@ public:
 private:
     ros::ServiceServer resetService;
 
+    ros::Publisher odometry_pub;
+
+    tf2_ros::TransformBroadcaster br;
+
     ros::Time last_time
     double x_k;
     double y_k;
     double theta_k;
 };
 
-void first_Callback(const std_msgs::Header::ConstPtr& msg){ //inizializzazione classe odometry
+void first_Callback(const std_msgs::Header::ConstPtr& msg){ //inizializzazione tempo
     odometry_class::set_last_time(msg->stamp);
 }
 
@@ -56,14 +69,10 @@ void cmd_velCallback(const geometry_msgs::TwistedStamped::ConstPtr& msg) {
     odometry(msg->header.stamp,msg->linear.x,msg->linear.y,msg->angular.z);
 }
 
-void odometry(ros::Time time, float v_x, float v_y, float w){
+void odometry(ros::Time time, double v_x, double v_y, double w){
     double x_k1;
     double y_k1;
     double theta_k1;
-
-    tf2_ros::TransformBroadcaster br;
-
-    ros::Publisher odometry_pub = n.advertise<nav_msgs::Odometry>("odom", 1000);
 
     //Euler integration
     x_k1 = odometry_class::get_x_k + v_k * (time - odometry_class::get_last_time()).toSec() * cos(theta_k);  //angoli in radianti
@@ -93,28 +102,25 @@ void odometry(ros::Time time, float v_x, float v_y, float w){
     transformStamped.transform.rotation.z = q.z();
     transformStamped.transform.rotation.w = q.w();
     // send transform
-    br.sendTransform(transformStamped);
-
+    odometry_class::transformation(transformStamped);
 
     // generate  msg
     nav_msgs::Odometry odom_msg;
     //Header
     odom_msg.header.frame_id = "odom";
     odom_msg.header.stamp = time;
-
     //set the position
     odom_msg.pose.pose.position.x = x_k1;
     odom_msg.pose.pose.position.y = y_k1;
     odom_msg.pose.pose.position.z =  ;
     odom_msg.pose.pose.orientation = transformStamped.transform.rotation;   //non sono sicuro
-
     //set the velocity
     odom_msg.child_frame_id = "base_link";
     odom_msg.twist.twist.linear.x = v_x;
     odom_msg.twist.twist.linear.y = v_y;
     odom_msg.twist.twist.angular.z = w;
 
-    odometry_pub.publish(odom_msg);
+    odometry_class::pub(odom_msg);
 }
 
 int main(int argc, char **argv) {
@@ -122,8 +128,8 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "odometry");  //per inizializzare il nodo
     ros::NodeHandle n;                  //per inizializzare il nodo
 
-    ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, cmd_velCallback);
     ros::Subscriber first_sub = n.subscribe("first", 1000, first_Callback);
+    ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, cmd_velCallback);
 
     ros::spin();      //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 
