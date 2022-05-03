@@ -106,7 +106,6 @@ void kinematics(double front_left_velocity, double front_right_velocity, double 
     // generate  msg
     geometry_msgs::TwistStamped velocities_msg;
 
-    velocities_msg.header.frame_id = ;  //frame_id lo cambiamo?
     velocities_msg.header.stamp = time;
 
     velocities_msg.linear.x = v_x;

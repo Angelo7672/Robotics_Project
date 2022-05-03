@@ -2,6 +2,11 @@
 #include <geometry_msgs/TwistStamped.h>
 #include "project1/Rpm.h"
 
+#define WHEEL_RADIUS 0.07
+#define WHEEL_POSITION_ALONG_X 0.200
+#define WHEEL_POSITION_ALONG_Y 0.169
+#define ENCODERS_RESOLUTION 42
+
 class wheel_speeds{
 public:
     wheel_speeds(){
@@ -9,6 +14,13 @@ public:
     }
 
     void calculateRpm(double v_x, double v_y, double w, ros::Time time){
+        rpm_fl = (1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x - v_y);
+        rpm_fr = (1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x + v_y);
+        rpm_rl = (1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x - v_y);
+        rpm_rr = (1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x + v_y);
+
+
+
 
         // generate  msg
         project1::Rpm rpm_msg;

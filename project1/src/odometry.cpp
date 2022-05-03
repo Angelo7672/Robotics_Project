@@ -112,7 +112,7 @@ void odometry(ros::Time time, double v_x, double v_y, double w){
     //set the position
     odom_msg.pose.pose.position.x = x_k1;
     odom_msg.pose.pose.position.y = y_k1;
-    odom_msg.pose.pose.position.z =  ;
+    odom_msg.pose.pose.position.z =  0.37;  //approssimato
     odom_msg.pose.pose.orientation = transformStamped.transform.rotation;   //non sono sicuro
     //set the velocity
     odom_msg.child_frame_id = "base_link";
@@ -127,6 +127,15 @@ int main(int argc, char **argv) {
     odometry_class my_odometry;
     ros::init(argc, argv, "odometry");  //per inizializzare il nodo
     ros::NodeHandle n;                  //per inizializzare il nodo
+
+    //set initial pose
+    if(argc != 4){
+        ROS_INFO("usage: odometry initial_x initial_y initial_theta");
+        return 1;
+    }
+    my_odometry::set_x_k(atof(argv[1].c_str()));
+    my_odometry::set_y_k(atof(argv[2].c_str()));
+    my_odometry::set_theta_k(atof(argv[3].c_str()));
 
     ros::Subscriber first_sub = n.subscribe("first", 1000, first_Callback);
     ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, cmd_velCallback);
