@@ -1,7 +1,6 @@
 #include "ros/ros.h"
 #include "project1/Reset.h"
 
-
 int main(int argc, char **argv){
     ros::init(argc, argv, "reset_client");
 
