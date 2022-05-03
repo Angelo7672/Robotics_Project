@@ -36,7 +36,9 @@ public:
     }
 
 private:
+    ros::NodeHandle n;
     ros::Publisher rpm_pub;
+
     double rpm_fl;
     double rpm_fr;
     double rpm_rr;

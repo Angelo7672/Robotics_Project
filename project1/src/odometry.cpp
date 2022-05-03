@@ -49,13 +49,13 @@ public:
     double get_theta_k(){ return this->theta_k; }
 
 private:
+    ros::NodeHandle n;
     ros::ServiceServer resetService;
-
     ros::Publisher odometry_pub;
 
     tf2_ros::TransformBroadcaster br;
 
-    ros::Time last_time
+    ros::Time last_time;
     double x_k;
     double y_k;
     double theta_k;

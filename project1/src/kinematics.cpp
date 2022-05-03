@@ -55,6 +55,7 @@ public:
     bool get_first(){ return this->first; }
 
 private:
+    ros::NodeHandle n;
     ros::Publisher first_pub;
     ros::Publisher kinematics_pub;
 
