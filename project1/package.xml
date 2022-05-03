@@ -4,6 +4,9 @@
   <version>0.0.0</version>
   <description>The project1 package</description>
 
+  <maintainer email="angelo.attivissimo@mail.polimi.it">Angelo Attivissimo (10667094)</maintainer>
+  <maintainer email="roberto.abbate@mail.polimi.it">Roberto Abbate ()</maintainer>
+
   <author email="angelo.attivissimo@mail.polimi.it">Angelo Attivissimo (10667094)</author>
   <author email="roberto.abbate@mail.polimi.it">Roberto Abbate ()</author>
 
