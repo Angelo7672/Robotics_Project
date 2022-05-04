@@ -3,7 +3,6 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Header.h>
 #include <cmath>
-#include <string>
 
 #define _USE_MATH_DEFINES
 #define WHEEL_RADIUS 0.07
@@ -103,14 +102,13 @@ private:
     bool first;
 };
 
-
-
 int main(int argc, char **argv) {
-    kinematics_tick my_kinematics;
     ros::init(argc, argv, "kinematics");  //per inizializzare il nodo
     ros::NodeHandle n;                    //per inizializzare il nodo
 
-    ros::Subscriber wheel_states_sub = n.subscribe("wheel_states", 1000, &kinematics_tick::wheel_statesCallback, &kinematics_tick);
+    kinematics_tick my_kinematics;
+
+    ros::Subscriber wheel_states_sub = n.subscribe("wheel_states", 1000, &kinematics_tick::wheel_statesCallback, &my_kinematics);
 
     ros::spin();     //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 

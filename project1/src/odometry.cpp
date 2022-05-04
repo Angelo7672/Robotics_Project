@@ -36,8 +36,8 @@ public:
         double theta_k1;
 
         //Euler integration
-        x_k1 = x_k + v_k * (time - last_time).toSec() * cos(theta_k);  //angoli in radianti
-        y_k1 = y_k + v_k * (time - last_time).toSec() * sin(theta_k);
+        x_k1 = x_k + v_x * (time - last_time).toSec() /* * cos(theta_k)*/;  //angoli in radianti
+        y_k1 = y_k + v_y * (time - last_time).toSec() /* * sin(theta_k)*/;
         theta_k1 = theta_k + w * (time - last_time).toSec();
 
         //aggiornamento dati
@@ -115,9 +115,10 @@ private:
 };
 
 int main(int argc, char **argv) {
-    odometry_class my_odometry;
     ros::init(argc, argv, "odometry");  //per inizializzare il nodo
     ros::NodeHandle n;                  //per inizializzare il nodo
+
+    odometry_class my_odometry;
 
     //set initial pose
     //get parameter /initial_pose from parameter server
@@ -131,8 +132,8 @@ int main(int argc, char **argv) {
     my_odometry.set_y_k(y_0);
     my_odometry.set_theta_k(theta_0);
 
-    ros::Subscriber first_sub = n.subscribe("first", 1000, &odometry_class::first_Callback, &odometry_class);
-    ros::Subscriber kinematics_sub = n.subscribe("cmd_vel", 1000, &odometry_class::cmd_velCallback, &odometry_class);
+    ros::Subscriber first_sub = n.subscribe("first", 1000, &odometry_class::first_Callback, &my_odometry);
+    ros::Subscriber kinematics_sub = n.subscribe("cmd_vel", 1000, &odometry_class::cmd_velCallback, &my_odometry);
 
     ros::spin();      //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 
