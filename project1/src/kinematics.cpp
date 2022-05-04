@@ -69,21 +69,25 @@ public:
 
         velocities_msg.header.stamp = time;
 
-        velocities_msg.linear.x = v_x;
-        velocities_msg.linear.y = v_y;
-        velocities_msg.linear.z = 0;
-        velocities_msg.angular.x = 0;
-        velocities_msg.angular.y = 0;
-        velocities_msg.angular.z = w;
+        velocities_msg.twist.linear.x = v_x;
+        velocities_msg.twist.linear.y = v_y;
+        velocities_msg.twist.linear.z = 0;
+        velocities_msg.twist.angular.x = 0;
+        velocities_msg.twist.angular.y = 0;
+        velocities_msg.twist.angular.z = w;
 
-        my_kinematics::pub(velocities_msg);
+        pub(velocities_msg);
     }
 
-    void pub(geometry_msgs::TwistStamped velocities_msg){
-        kinematics_pub.publish(velocities_msg);
+    void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
+        if(first) {
+            kinematics(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
+        } else {    //durante il primo giro perche' per calcolare la velocita' ci servono due misure
+            initialization(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
+        }
     }
 
-    bool get_first(){ return this->first; }
+    void pub(geometry_msgs::TwistStamped velocities_msg){ kinematics_pub.publish(velocities_msg); }
 
 private:
     ros::NodeHandle n;
@@ -99,13 +103,7 @@ private:
     bool first;
 };
 
-void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
-    if(my_kinematics::get_first()) {
-        kinematics(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
-    } else {    //durante il primo giro perche' per calcolare la velocita' ci servono due misure
-        initialization(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
-    }
-}
+
 
 int main(int argc, char **argv) {
     kinematics_tick my_kinematics;

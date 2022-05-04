@@ -35,6 +35,10 @@ public:
         rpm_pub.publish(rpm_msg);
     }
 
+    void cmd_velCallback(const geometry_msgs::TwistStamped::ConstPtr& msg){
+        calculateRpm(msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z,msg->header.stamp);
+    }
+
 private:
     ros::NodeHandle n;
     ros::Publisher rpm_pub;
@@ -45,16 +49,12 @@ private:
     double rpm_rl;
 };
 
-void cmd_velCallback(const geometry_msgs::TwistStamped::ConstPtr& msg){
-    calculateRpm(msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z,msg->header.stamp);
-}
-
 int main(int argc, char **argv){
     wheel_speeds my_rpm;
     ros::init(argc,argv, "wheel_speeds");
     ros::NodeHandle n;
 
-    ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 1000, cmd_velCallback);
+    ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 1000, my_rpm::cmd_velCallback);
 
     ros::spin();     //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 

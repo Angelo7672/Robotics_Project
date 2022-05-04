@@ -17,12 +17,12 @@ public:
 
     bool reset_callback(project1::Reset::Request  &req,
                         project1::Reset::Response &res) {
-        res.old_x = this->x;
-        res.old_y = this->y;
-        res.old_theta = this->theta;
-        this->x = req.new_x;
-        this->y = req.new_y;
-        this->theta = req.new_theta;
+        res.old_x = this->x_k;
+        res.old_y = this->y_k;
+        res.old_theta = this->theta_k;
+        this->x_k = req.new_x;
+        this->y_k = req.new_y;
+        this->theta_k = req.new_theta;
         ROS_INFO("Request to reset x to %f - Responding with x: %f\nRequest to reset y to %f - Responding with y: %f\nRequest to reset theta to %f - Responding with theta: %f",
                  (double)req.new_x, (double)res.old_x,
                  (double)req.new_y, (double)res.old_y,
@@ -85,11 +85,18 @@ public:
         pub(odom_msg);
     }
 
+    void first_Callback(const std_msgs::Header::ConstPtr& msg){ //inizializzazione tempo
+        last_time = msg->stamp;
+    }
+
+    void cmd_velCallback(const geometry_msgs::TwistStamped::ConstPtr& msg) {
+        odometry(msg->header.stamp,msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z);
+    }
+
     void transformation(geometry_msgs::TransformStamped transformStamped){ br.sendTransform(transformStamped); }
 
     void pub(nav_msgs::Odometry odom_msg){ odometry_pub.publish(odom_msg); }
 
-    void set_last_time(ros::Time last_time){ this->last_time = last_time; }
     void set_x_k(double x_k){ this->x_k = x_k; }
     void set_y_k(double y_k){ this->y_k = y_k; }
     void set_theta_k(double theta_k){ this->theta_k = theta_k; }
@@ -107,27 +114,20 @@ private:
     double theta_k;
 };
 
-void first_Callback(const std_msgs::Header::ConstPtr& msg){ //inizializzazione tempo
-    my_odometry::set_last_time(msg->stamp);
-}
-
-void cmd_velCallback(const geometry_msgs::TwistedStamped::ConstPtr& msg) {
-    odometry(msg->header.stamp,msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z);
-}
-
 int main(int argc, char **argv) {
     odometry_class my_odometry;
     ros::init(argc, argv, "odometry");  //per inizializzare il nodo
     ros::NodeHandle n;                  //per inizializzare il nodo
 
     //set initial pose
-    if(argc != 4){
-        ROS_INFO("usage: odometry initial_x initial_y initial_theta");
-        return 1;
-    }
-    my_odometry::set_x_k(atof(argv[1]));
-    my_odometry::set_y_k(atof(argv[2]));
-    my_odometry::set_theta_k(atof(argv[3]);
+    //get parameter /initial_pose from parameter server
+    double x_0;
+    double y_0;
+    double theta_0;
+    n.getParam("/initial_pose", x_0, y_0, theta_0);
+    my_odometry::set_x_k(x_0);
+    my_odometry::set_y_k(y_0);
+    my_odometry::set_theta_k(theta_0);
 
     ros::Subscriber first_sub = n.subscribe("first", 1000, first_Callback);
     ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, cmd_velCallback);
