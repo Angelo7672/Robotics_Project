@@ -54,7 +54,7 @@ int main(int argc, char **argv){
     ros::init(argc,argv, "wheel_speeds");
     ros::NodeHandle n;
 
-    ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 1000, my_rpm::cmd_velCallback);
+    ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 1000, my_rpm.cmd_velCallback);
 
     ros::spin();     //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 

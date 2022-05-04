@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "kinematics");  //per inizializzare il nodo
     ros::NodeHandle n;                    //per inizializzare il nodo
 
-    ros::Subscriber kinematics_sub = n.subscribe("wheel_states", 1000, wheel_statesCallback);
+    ros::Subscriber kinematics_sub = n.subscribe("wheel_states", 1000, my_kinematics.wheel_statesCallback);
 
     ros::spin();     //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 

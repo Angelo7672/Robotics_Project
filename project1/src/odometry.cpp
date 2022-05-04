@@ -125,12 +125,12 @@ int main(int argc, char **argv) {
     double y_0;
     double theta_0;
     n.getParam("/initial_pose", x_0, y_0, theta_0);
-    my_odometry::set_x_k(x_0);
-    my_odometry::set_y_k(y_0);
-    my_odometry::set_theta_k(theta_0);
+    my_odometry.set_x_k(x_0);
+    my_odometry.set_y_k(y_0);
+    my_odometry.set_theta_k(theta_0);
 
-    ros::Subscriber first_sub = n.subscribe("first", 1000, first_Callback);
-    ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, cmd_velCallback);
+    ros::Subscriber first_sub = n.subscribe("first", 1000, my_odometry.first_Callback);
+    ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, my_odometry.cmd_velCallback);
 
     ros::spin();      //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 
