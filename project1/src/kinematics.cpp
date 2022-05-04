@@ -69,7 +69,7 @@ private:
 };
 
 void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
-    if(kinematics_tick::get_first()) {
+    if(my_kinematics::get_first()) {
         kinematics(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
     } else {    //durante il primo giro perche' per calcolare la velocita' ci servono due misure
         initialization(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
@@ -85,10 +85,10 @@ void kinematics(double front_left_velocity, double front_right_velocity, double 
     double v_y;
     double w;
 
-    u_1 = (front_left_velocity - kinematics_tick::getfront_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_2 = (front_right_velocity - kinematics_tick::getfront_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_3 = (rear_left_velocity - kinematics_tick::getrear_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_4 = (rear_right_velocity - kinematics_tick::getrear_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+    u_1 = (front_left_velocity - my_kinematics::get_front_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+    u_2 = (front_right_velocity - my_kinematics::get_front_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+    u_3 = (rear_left_velocity - my_kinematics::get_rear_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+    u_4 = (rear_right_velocity - my_kinematics::get_rear_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
 
     //fare check con dati matrice video
     //forse servono degli if per queste formule
@@ -97,12 +97,12 @@ void kinematics(double front_left_velocity, double front_right_velocity, double 
     w = - (WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
 
     //aggiornamento dati
-    kinematics_tick::set_front_left(front_left_velocity);
-    kinematics_tick::set_front_right(front_right_velocity);
-    kinematics_tick::set_rear_left(rear_left_velocity);
-    kinematics_tick::set_rear_right(rear_right_velocity);
-    kinematics_tick::set_time_sec(time_sec);
-    kinematics_tick::set_time_nsec(time_nsec);
+    my_kinematics::set_front_left(front_left_velocity);
+    my_kinematics::set_front_right(front_right_velocity);
+    my_kinematics::set_rear_left(rear_left_velocity);
+    my_kinematics::set_rear_right(rear_right_velocity);
+    my_kinematics::set_time_sec(time_sec);
+    my_kinematics::set_time_nsec(time_nsec);
 
     // generate  msg
     geometry_msgs::TwistStamped velocities_msg;
@@ -116,7 +116,7 @@ void kinematics(double front_left_velocity, double front_right_velocity, double 
     velocities_msg.angular.y = 0;
     velocities_msg.angular.z = w;
 
-    kinematics_tick::pub(velocities_msg);
+    my_kinematics::pub(velocities_msg);
 }
 
 int main(int argc, char **argv) {

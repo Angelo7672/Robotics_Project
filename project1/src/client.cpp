@@ -11,10 +11,11 @@ int main(int argc, char **argv){
 
     ros::NodeHandle n;
     ros::ServiceClient client = n.serviceClient<project1::Reset>("reset");
+
     project1::Reset srv;
-    srv.request.new_x = atof(argv[1].c_str());
-    srv.request.new_y = atof(argv[2].c_str());
-    srv.request.new_theta = atof(argv[3].c_str());
+    srv.request.new_x = atof(argv[1]);
+    srv.request.new_y = atof(argv[2]);
+    srv.request.new_theta = atof(argv[3]);
 
     if (client.call(srv)){
         ROS_INFO("Old odom: (x:%f,y:%f,theta:%f)", (double)srv.response.old_x, (double)srv.response.old_y, (double)srv.response.old_theta);

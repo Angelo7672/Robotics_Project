@@ -30,13 +30,9 @@ public:
         return true;
     }
 
-    void transformation(geometry_msgs::TransformStamped transformStamped){
-        br.sendTransform(transformStamped);
-    }
+    void transformation(geometry_msgs::TransformStamped transformStamped){ br.sendTransform(transformStamped); }
 
-    void pub(nav_msgs::Odometry odom_msg){
-        odometry_pub.publish(odom_msg);
-    }
+    void pub(nav_msgs::Odometry odom_msg){ odometry_pub.publish(odom_msg); }
 
     void set_last_time(ros::Time last_time){ this->last_time = last_time; }
     void set_x_k(double x_k){ this->x_k = x_k; }
@@ -62,11 +58,11 @@ private:
 };
 
 void first_Callback(const std_msgs::Header::ConstPtr& msg){ //inizializzazione tempo
-    odometry_class::set_last_time(msg->stamp);
+    my_odometry::set_last_time(msg->stamp);
 }
 
 void cmd_velCallback(const geometry_msgs::TwistedStamped::ConstPtr& msg) {
-    odometry(msg->header.stamp,msg->linear.x,msg->linear.y,msg->angular.z);
+    odometry(msg->header.stamp,msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z);
 }
 
 void odometry(ros::Time time, double v_x, double v_y, double w){
@@ -75,14 +71,14 @@ void odometry(ros::Time time, double v_x, double v_y, double w){
     double theta_k1;
 
     //Euler integration
-    x_k1 = odometry_class::get_x_k + v_k * (time - odometry_class::get_last_time()).toSec() * cos(theta_k);  //angoli in radianti
-    y_k1 = odometry_class::get_y_k + v_k * (time - odometry_class::get_last_time()).toSec() * sen(theta_k);
-    theta_k1 = odometry_class::get_theta_k + w * (time - odometry_class::get_last_time()).toSec();
+    x_k1 = my_odometry::get_x_k + v_k * (time - my_odometry::get_last_time()).toSec() * cos(my_odometry::get_theta_k);  //angoli in radianti
+    y_k1 = my_odometry::get_y_k + v_k * (time - my_odometry::get_last_time()).toSec() * sin(my_odometry::get_theta_k);
+    theta_k1 = my_odometry::get_theta_k + w * (time - my_odometry::get_last_time()).toSec();
 
-    odometry_class::set_last_time(time);
-    odometry_class::set_x_k(x_k1);
-    odometry_class::set_y_k(y_k1);
-    odomedry_class::set_theta_k(theta_k1);
+    my_odometry::set_last_time(time);
+    my_odometry::set_x_k(x_k1);
+    my_odometry::set_y_k(y_k1);
+    my_odometry::set_theta_k(theta_k1);
 
     // generate  msg
     geometry_msgs::TransformStamped transformStamped;
@@ -102,7 +98,7 @@ void odometry(ros::Time time, double v_x, double v_y, double w){
     transformStamped.transform.rotation.z = q.z();
     transformStamped.transform.rotation.w = q.w();
     // send transform
-    odometry_class::transformation(transformStamped);
+    my_odometry::transformation(transformStamped);
 
     // generate  msg
     nav_msgs::Odometry odom_msg;
@@ -120,7 +116,7 @@ void odometry(ros::Time time, double v_x, double v_y, double w){
     odom_msg.twist.twist.linear.y = v_y;
     odom_msg.twist.twist.angular.z = w;
 
-    odometry_class::pub(odom_msg);
+    my_odometry::pub(odom_msg);
 }
 
 int main(int argc, char **argv) {
@@ -133,9 +129,9 @@ int main(int argc, char **argv) {
         ROS_INFO("usage: odometry initial_x initial_y initial_theta");
         return 1;
     }
-    my_odometry::set_x_k(atof(argv[1].c_str()));
-    my_odometry::set_y_k(atof(argv[2].c_str()));
-    my_odometry::set_theta_k(atof(argv[3].c_str()));
+    my_odometry::set_x_k(atof(argv[1]));
+    my_odometry::set_y_k(atof(argv[2]));
+    my_odometry::set_theta_k(atof(argv[3]);
 
     ros::Subscriber first_sub = n.subscribe("first", 1000, first_Callback);
     ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, cmd_velCallback);

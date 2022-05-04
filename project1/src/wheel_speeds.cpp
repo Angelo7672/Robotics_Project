@@ -46,7 +46,7 @@ private:
 };
 
 void cmd_velCallback(const geometry_msgs::TwistStamped::ConstPtr& msg){
-    calculateRpm(msg->linear.x,msg->linear.y,msg->angular.z,msg->header.stamp);
+    calculateRpm(msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z,msg->header.stamp);
 }
 
 int main(int argc, char **argv){
