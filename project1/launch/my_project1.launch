@@ -1,21 +1,20 @@
 <launch>
 
     <!-- bag1 -->
-    <param name="x_0" value="0.00815962441266"/>
-    <param name="y_0" value="0.003059721319"/>
-    <param name="theta_0" value="0.368708342314"/>
+    <param name="x_0" type="double" value="0.00815962441266"/>
+    <param name="y_0" type="double" value="0.003059721319"/>
+    <param name="theta_0" type="double" value="0.368708342314"/>
     <!-- bag2 -->
-    <!--<param name="x_0" value="0.0242218170315"/>
-    <param name="y_0" value="0.00374252465554"/>
-    <param name="theta_0" value="0.372348427773"/>-->
+    <!--<param name="x_0" type="double" value="0.0242218170315"/>
+    <param name="y_0" type="double" value="0.00374252465554"/>
+    <param name="theta_0" type="double" value="0.372348427773"/>-->
     <!-- bag3 -->
-    <!--<param name="x_0" value="0.00546012399718"/>
-    <param name="y_0" value="0.0399703718722"/>
-    <param name="theta_0" value="0.370361357927"/>-->
+    <!--<param name="x_0" type="double" value="0.00546012399718"/>
+    <param name="y_0" type="double" value="0.0399703718722"/>
+    <param name="theta_0" type="double" value="0.370361357927"/>-->
 
     <node pkg="project1" type="kinematics" name="kinematics"/>
     <node pkg="project1" type="odometry" name="odometry"/>
     <node pkg="project1" type="wheel_speeds" name="wheel_speeds"/>
-    <node pkg="project1" type="client" name="reset_client"/>
 
 </launch>

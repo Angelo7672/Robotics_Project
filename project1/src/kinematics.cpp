@@ -18,6 +18,7 @@ public:
         this->first_pub = this->n.advertise<std_msgs::Header>("first", 1000);
         this->kinematics_pub = this->n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
         this->first = false;
+        this->wheel_states_sub = this->n.subscribe("wheel_states", 1000, wheel_statesCallback);
     }
 
     void initialization(double front_left, double front_right, double rear_left, double rear_right, ros::Time time){
@@ -93,6 +94,7 @@ private:
     ros::NodeHandle n;
     ros::Publisher first_pub;
     ros::Publisher kinematics_pub;
+    ros::Subscriber wheel_states;
 
     ros::Time time;
     float front_left_ticks;
@@ -110,7 +112,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "kinematics");  //per inizializzare il nodo
     ros::NodeHandle n;                    //per inizializzare il nodo
 
-    ros::Subscriber kinematics_sub = n.subscribe("wheel_states", 1000, my_kinematics.wheel_statesCallback);
+     =
 
     ros::spin();     //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 

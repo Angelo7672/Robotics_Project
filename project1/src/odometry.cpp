@@ -11,8 +11,10 @@
 class odometry_class{
 public:
     odometry_class(){
-        this-> resetService = this->n.advertiseService("reset", &odometry_class::reset_callback, this);
-        this-> odometry_pub = this->n.advertise<nav_msgs::Odometry>("odom", 1000);
+        this->resetService = this->n.advertiseService("reset", &odometry_class::reset_callback, this);
+        this->odometry_pub = this->n.advertise<nav_msgs::Odometry>("odom", 1000);
+        this->first_sub = this->n.subscribe("first", 1000, first_Callback);
+        this->kinematics_sub = this->n.subscribe("cmd_vel", 1000, cmd_velCallback);
     }
 
     bool reset_callback(project1::Reset::Request  &req,
@@ -105,6 +107,8 @@ private:
     ros::NodeHandle n;
     ros::ServiceServer resetService;
     ros::Publisher odometry_pub;
+    ros::Subscriber first_sub;
+    ros::Subscriber kinematics_sub;
 
     tf2_ros::TransformBroadcaster br;
 
@@ -128,9 +132,6 @@ int main(int argc, char **argv) {
     my_odometry.set_x_k(x_0);
     my_odometry.set_y_k(y_0);
     my_odometry.set_theta_k(theta_0);
-
-    ros::Subscriber first_sub = n.subscribe("first", 1000, my_odometry.first_Callback);
-    ros::Subscriber odometry_sub = n.subscribe("cmd_vel", 1000, my_odometry.cmd_velCallback);
 
     ros::spin();      //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 
