@@ -11,7 +11,6 @@ class wheel_speeds{
 public:
     wheel_speeds(){
         this->rpm_pub = this->n.advertise<project1::Rpm>("wheels_rpm",1000);
-        this->cmd_vel_sub = this->n.subscribe("cmd_vel", 1000, cmd_velCallback);
     }
 
     void calculateRpm(double v_x, double v_y, double w, ros::Time time){
@@ -43,7 +42,6 @@ public:
 private:
     ros::NodeHandle n;
     ros::Publisher rpm_pub;
-    ros::Subscriber cmd_vel_sub;
 
     double rpm_fl;
     double rpm_fr;
@@ -54,6 +52,9 @@ private:
 int main(int argc, char **argv){
     wheel_speeds my_rpm;
     ros::init(argc,argv, "wheel_speeds");
+    ros::NodeHandle n;
+
+    ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 1000, &wheel_speeds::cmd_velCallback, &wheel_speeds);
 
     ros::spin();     //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 

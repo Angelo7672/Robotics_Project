@@ -13,8 +13,6 @@ public:
     odometry_class(){
         this->resetService = this->n.advertiseService("reset", &odometry_class::reset_callback, this);
         this->odometry_pub = this->n.advertise<nav_msgs::Odometry>("odom", 1000);
-        this->first_sub = this->n.subscribe("first", 1000, first_Callback);
-        this->kinematics_sub = this->n.subscribe("cmd_vel", 1000, cmd_velCallback);
     }
 
     bool reset_callback(project1::Reset::Request  &req,
@@ -107,8 +105,6 @@ private:
     ros::NodeHandle n;
     ros::ServiceServer resetService;
     ros::Publisher odometry_pub;
-    ros::Subscriber first_sub;
-    ros::Subscriber kinematics_sub;
 
     tf2_ros::TransformBroadcaster br;
 
@@ -128,10 +124,15 @@ int main(int argc, char **argv) {
     double x_0;
     double y_0;
     double theta_0;
-    n.getParam("/initial_pose", x_0, y_0, theta_0);
+    n.getParam("/x_0", x_0);
+    n.getParam("/y_0", y_0);
+    n.getParam("/theta_0", theta_0);
     my_odometry.set_x_k(x_0);
     my_odometry.set_y_k(y_0);
     my_odometry.set_theta_k(theta_0);
+
+    ros::Subscriber first_sub = n.subscribe("first", 1000, &odometry_class::first_Callback, &odometry_class);
+    ros::Subscriber kinematics_sub = n.subscribe("cmd_vel", 1000, &odometry_class::cmd_velCallback, &odometry_class);
 
     ros::spin();      //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 
