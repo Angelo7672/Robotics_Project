@@ -37,21 +37,52 @@ public:
         this->first = true;  //dopo il primo giro sara' sempre a true
     }
 
+    void kinematics(double front_left_velocity, double front_right_velocity, double rear_left_velocity, double rear_right_velocity, ros::Time new_time){
+        double u_1;
+        double u_2;
+        double u_3;
+        double u_4;
+        double v_x;
+        double v_y;
+        double w;
+
+        u_1 = (front_left_velocity - front_left_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+        u_2 = (front_right_velocity - front_right_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+        u_3 = (rear_left_velocity - rear_left_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+        u_4 = (rear_right_velocity - rear_right_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+
+        //fare check con dati matrice video
+        //forse servono degli if per queste formule
+        v_x = (WHEEL_RADIUS / 2) * (u_1 + u_2);
+        v_y = (WHEEL_RADIUS / 2) * (u_2 - u_3);
+        w = - (WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
+
+        //aggiornamento dati
+        this->front_left_ticks = front_left_velocity;
+        this->front_right_ticks = front_right_velocity;
+        this->rear_left_ticks = rear_left_velocity;
+        this->rear_right_ticks = rear_right_velocity;
+        this->time = new_time;
+
+        // generate  msg
+        geometry_msgs::TwistStamped velocities_msg;
+
+        velocities_msg.header.stamp = time;
+
+        velocities_msg.linear.x = v_x;
+        velocities_msg.linear.y = v_y;
+        velocities_msg.linear.z = 0;
+        velocities_msg.angular.x = 0;
+        velocities_msg.angular.y = 0;
+        velocities_msg.angular.z = w;
+
+        my_kinematics::pub(velocities_msg);
+    }
+
     void pub(geometry_msgs::TwistStamped velocities_msg){
         kinematics_pub.publish(velocities_msg);
     }
 
-    void set_front_left(float ticks){ this->front_left_ticks = ticks; }
-    void set_front_right(float ticks){ this->front_right_ticks = ticks; }
-    void set_rear_left(float ticks){ this->rear_left_ticks = ticks; }
-    void set_rear_right(float ticks){ this->rear_right_ticks = ticks; }
-    void set_time(ros::Time time){ this->time = time; }
-
-    float get_front_left_ticks(){ return this->front_left_ticks; }
-    float get_front_right_ticks(){ return this->front_right_ticks; }
-    float get_rear_left_ticks(){ return this->rear_left_ticks; }
-    float get_rear_right_ticks(){ return this->rear_right_ticks; }
-    ros::Time get_time(){ return this->time; }
     bool get_first(){ return this->first; }
 
 private:
@@ -74,49 +105,6 @@ void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
     } else {    //durante il primo giro perche' per calcolare la velocita' ci servono due misure
         initialization(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
     }
-}
-
-void kinematics(double front_left_velocity, double front_right_velocity, double rear_left_velocity, double rear_right_velocity, ros::Time time){
-    double u_1;
-    double u_2;
-    double u_3;
-    double u_4;
-    double v_x;
-    double v_y;
-    double w;
-
-    u_1 = (front_left_velocity - my_kinematics::get_front_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_2 = (front_right_velocity - my_kinematics::get_front_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_3 = (rear_left_velocity - my_kinematics::get_rear_left_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-    u_4 = (rear_right_velocity - my_kinematics::get_rear_right_ticks()) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-
-    //fare check con dati matrice video
-    //forse servono degli if per queste formule
-    v_x = (WHEEL_RADIUS / 2) * (u_1 + u_2);
-    v_y = (WHEEL_RADIUS / 2) * (u_2 - u_3);
-    w = - (WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
-
-    //aggiornamento dati
-    my_kinematics::set_front_left(front_left_velocity);
-    my_kinematics::set_front_right(front_right_velocity);
-    my_kinematics::set_rear_left(rear_left_velocity);
-    my_kinematics::set_rear_right(rear_right_velocity);
-    my_kinematics::set_time_sec(time_sec);
-    my_kinematics::set_time_nsec(time_nsec);
-
-    // generate  msg
-    geometry_msgs::TwistStamped velocities_msg;
-
-    velocities_msg.header.stamp = time;
-
-    velocities_msg.linear.x = v_x;
-    velocities_msg.linear.y = v_y;
-    velocities_msg.linear.z = 0;
-    velocities_msg.angular.x = 0;
-    velocities_msg.angular.y = 0;
-    velocities_msg.angular.z = w;
-
-    my_kinematics::pub(velocities_msg);
 }
 
 int main(int argc, char **argv) {

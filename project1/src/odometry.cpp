@@ -30,6 +30,61 @@ public:
         return true;
     }
 
+    void odometry(ros::Time time, double v_x, double v_y, double w){
+        double x_k1;
+        double y_k1;
+        double theta_k1;
+
+        //Euler integration
+        x_k1 = x_k + v_k * (time - last_time).toSec() * cos(theta_k);  //angoli in radianti
+        y_k1 = y_k + v_k * (time - last_time).toSec() * sin(theta_k);
+        theta_k1 = theta_k + w * (time - last_time).toSec();
+
+        //aggiornamento dati
+        last_time = time;
+        this->x_k = x_k1;
+        this->y_k = y_k1;
+        this->theta_k = theta_k1;
+
+        // generate  msg
+        geometry_msgs::TransformStamped transformStamped;
+        // set header
+        transformStamped.header.stamp = time;
+        transformStamped.header.frame_id = "odom";
+        transformStamped.child_frame_id = "base_link";
+        // set x,y
+        transformStamped.transform.translation.x = x_k1;
+        transformStamped.transform.translation.y = y_k1;
+        transformStamped.transform.translation.z = 0.0;
+        // set theta
+        tf2::Quaternion q;
+        q.setRPY(0, 0, theta_k1);
+        transformStamped.transform.rotation.x = q.x();
+        transformStamped.transform.rotation.y = q.y();
+        transformStamped.transform.rotation.z = q.z();
+        transformStamped.transform.rotation.w = q.w();
+        // send transform
+        transformation(transformStamped);
+
+        // generate  msg
+        nav_msgs::Odometry odom_msg;
+        //Header
+        odom_msg.header.frame_id = "odom";
+        odom_msg.header.stamp = time;
+        //set the position
+        odom_msg.pose.pose.position.x = x_k1;
+        odom_msg.pose.pose.position.y = y_k1;
+        odom_msg.pose.pose.position.z =  0.37;  //approssimato
+        odom_msg.pose.pose.orientation = transformStamped.transform.rotation;   //non sono sicuro
+        //set the velocity
+        odom_msg.child_frame_id = "base_link";
+        odom_msg.twist.twist.linear.x = v_x;
+        odom_msg.twist.twist.linear.y = v_y;
+        odom_msg.twist.twist.angular.z = w;
+
+        pub(odom_msg);
+    }
+
     void transformation(geometry_msgs::TransformStamped transformStamped){ br.sendTransform(transformStamped); }
 
     void pub(nav_msgs::Odometry odom_msg){ odometry_pub.publish(odom_msg); }
@@ -38,11 +93,6 @@ public:
     void set_x_k(double x_k){ this->x_k = x_k; }
     void set_y_k(double y_k){ this->y_k = y_k; }
     void set_theta_k(double theta_k){ this->theta_k = theta_k; }
-
-    ros::Time get_last_time(){ return this->last_time; }
-    double get_x_k(){ return this->x_k; }
-    double get_y_k(){ return this->y_k; }
-    double get_theta_k(){ return this->theta_k; }
 
 private:
     ros::NodeHandle n;
@@ -63,60 +113,6 @@ void first_Callback(const std_msgs::Header::ConstPtr& msg){ //inizializzazione t
 
 void cmd_velCallback(const geometry_msgs::TwistedStamped::ConstPtr& msg) {
     odometry(msg->header.stamp,msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z);
-}
-
-void odometry(ros::Time time, double v_x, double v_y, double w){
-    double x_k1;
-    double y_k1;
-    double theta_k1;
-
-    //Euler integration
-    x_k1 = my_odometry::get_x_k + v_k * (time - my_odometry::get_last_time()).toSec() * cos(my_odometry::get_theta_k);  //angoli in radianti
-    y_k1 = my_odometry::get_y_k + v_k * (time - my_odometry::get_last_time()).toSec() * sin(my_odometry::get_theta_k);
-    theta_k1 = my_odometry::get_theta_k + w * (time - my_odometry::get_last_time()).toSec();
-
-    my_odometry::set_last_time(time);
-    my_odometry::set_x_k(x_k1);
-    my_odometry::set_y_k(y_k1);
-    my_odometry::set_theta_k(theta_k1);
-
-    // generate  msg
-    geometry_msgs::TransformStamped transformStamped;
-    // set header
-    transformStamped.header.stamp = time;
-    transformStamped.header.frame_id = "odom";
-    transformStamped.child_frame_id = "base_link";
-    // set x,y
-    transformStamped.transform.translation.x = x_k1;
-    transformStamped.transform.translation.y = y_k1;
-    transformStamped.transform.translation.z = 0.0;
-    // set theta
-    tf2::Quaternion q;
-    q.setRPY(0, 0, theta_k1);
-    transformStamped.transform.rotation.x = q.x();
-    transformStamped.transform.rotation.y = q.y();
-    transformStamped.transform.rotation.z = q.z();
-    transformStamped.transform.rotation.w = q.w();
-    // send transform
-    my_odometry::transformation(transformStamped);
-
-    // generate  msg
-    nav_msgs::Odometry odom_msg;
-    //Header
-    odom_msg.header.frame_id = "odom";
-    odom_msg.header.stamp = time;
-    //set the position
-    odom_msg.pose.pose.position.x = x_k1;
-    odom_msg.pose.pose.position.y = y_k1;
-    odom_msg.pose.pose.position.z =  0.37;  //approssimato
-    odom_msg.pose.pose.orientation = transformStamped.transform.rotation;   //non sono sicuro
-    //set the velocity
-    odom_msg.child_frame_id = "base_link";
-    odom_msg.twist.twist.linear.x = v_x;
-    odom_msg.twist.twist.linear.y = v_y;
-    odom_msg.twist.twist.angular.z = w;
-
-    my_odometry::pub(odom_msg);
 }
 
 int main(int argc, char **argv) {
