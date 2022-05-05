@@ -1,0 +1,8 @@
+digraph G {
+"world" -> "odom"[label="Broadcaster: /world\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1651775186.582 sec old)\nBuffer length: 0.000 sec\n"];
+"odom" -> "base_link"[label="Broadcaster: /odometry\nAverage rate: 49.111 Hz\nMost recent transform: 1649348551.728 ( 2426634.853 sec old)\nBuffer length: 4.968 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1651775186.582"[ shape=plaintext ] ;
+ }->"world";
+}

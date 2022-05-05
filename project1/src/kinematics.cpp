@@ -2,9 +2,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Header.h>
-#include <cmath>
 
-#define _USE_MATH_DEFINES
 #define WHEEL_RADIUS 0.07
 #define WHEEL_POSITION_ALONG_X 0.200
 #define WHEEL_POSITION_ALONG_Y 0.169
@@ -44,17 +42,20 @@ public:
         double v_x;
         double v_y;
         double w;
+        double pi = 3.1415926535897932384626433832795028841971693993751058209749445923;
 
-        u_1 = (front_left_velocity - front_left_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-        u_2 = (front_right_velocity - front_right_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-        u_3 = (rear_left_velocity - rear_left_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
-        u_4 = (rear_right_velocity - rear_right_ticks) * (1 / 60) * (1 / GEAR_RATIO) * (1 / ENCODERS_RESOLUTION) * 2 * M_1_PI;
+        u_1 = (front_left_velocity - front_left_ticks) * (double)(1.0 / 60.0) * (double)(1.0 / GEAR_RATIO) * (double)(1.0 / ENCODERS_RESOLUTION) * (2.0 * pi);
+        u_2 = (front_right_velocity - front_right_ticks) * (double )(1.0 / 60.0) * (double)(1.0 / GEAR_RATIO) * (double )(1.0 / ENCODERS_RESOLUTION) * (2.0 * pi);
+        u_3 = (rear_left_velocity - rear_left_ticks) * (double )(1.0 / 60.0) * (double)(1.0 / GEAR_RATIO) * (double)(1.0 / ENCODERS_RESOLUTION) * (2.0 * pi);
+        u_4 = (rear_right_velocity - rear_right_ticks) * (double)(1.0/ 60.0) * (double)(1.0 / GEAR_RATIO) * (double)(1.0 / ENCODERS_RESOLUTION) * (2.0 * pi);
 
         //fare check con dati matrice video
         //forse servono degli if per queste formule
         v_x = (WHEEL_RADIUS / 2) * (u_1 + u_2);
         v_y = (WHEEL_RADIUS / 2) * (u_2 - u_3);
-        w = - (WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
+        w = - (double)(WHEEL_RADIUS / 2) * ((u_1 - u_3) / (double)(WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));
+
+        ROS_INFO("vx %f",v_x);
 
         //aggiornamento dati
         this->front_left_ticks = front_left_velocity;

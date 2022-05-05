@@ -17,4 +17,6 @@
     <node pkg="project1" type="odometry" name="odometry"/>
     <node pkg="project1" type="wheel_speeds" name="wheel_speeds"/>
 
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world" args="0 0 0 0 0 0 1 world odom"/>
+
 </launch>
