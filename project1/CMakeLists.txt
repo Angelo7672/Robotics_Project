@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
         message_generation
         tf2
         tf2_ros
+        dynamic_reconfigure
         )
 
 add_message_files(
@@ -29,6 +30,10 @@ generate_messages(
         geometry_msgs
         nav_msgs
         sensor_msgs
+)
+
+generate_dynamic_reconfigure_options(
+        cfg/dyn_rec_eu_rk.cfg
 )
 
 catkin_package(
