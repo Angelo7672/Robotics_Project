@@ -33,7 +33,7 @@ generate_messages(
 )
 
 generate_dynamic_reconfigure_options(
-        cfg/dyn_rec_eu_rk.cfg
+        cfg/parameters.cfg
 )
 
 catkin_package(

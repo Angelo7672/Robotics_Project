@@ -14,13 +14,10 @@ public:
     }
 
     void calculateRpm(double v_x, double v_y, double w, ros::Time time){
-        rpm_fl = (1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x - v_y);
-        rpm_fr = (1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x + v_y);
-        rpm_rl = (1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x - v_y);
-        rpm_rr = (1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x + v_y);
-
-
-
+        rpm_fl = ((1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x - v_y)) * 9.549297;
+        rpm_fr = ((1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x + v_y)) * 9.549297;
+        rpm_rl = ((1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x - v_y)) * 9.549297;
+        rpm_rr = ((1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x + v_y)) * 9.549297;
 
         // generate  msg
         project1::Rpm rpm_msg;
@@ -30,7 +27,7 @@ public:
         rpm_msg.rpm_fl = rpm_fl;
         rpm_msg.rpm_fr = rpm_fr;
         rpm_msg.rpm_rl = rpm_rl;
-        rpm_msg.rpm_rl = rpm_rr;
+        rpm_msg.rpm_rr = rpm_rr;
 
         rpm_pub.publish(rpm_msg);
     }
