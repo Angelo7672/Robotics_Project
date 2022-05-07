@@ -2,10 +2,10 @@
 #include <geometry_msgs/TwistStamped.h>
 #include "project1/Rpm.h"
 
-#define WHEEL_RADIUS 0.07
-#define WHEEL_POSITION_ALONG_X 0.200
-#define WHEEL_POSITION_ALONG_Y 0.169
-#define ENCODERS_RESOLUTION 42
+#define WHEEL_RADIUS /*0.07*/ 0.10
+#define WHEEL_POSITION_ALONG_X /*0.200*/ 0.070
+#define WHEEL_POSITION_ALONG_Y /*0.169*/ 0.070
+#define ENCODERS_RESOLUTION /*42*/ 30
 
 class wheel_speeds{
 public:

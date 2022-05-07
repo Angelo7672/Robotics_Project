@@ -1,9 +1,8 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(project1)
 
 find_package(catkin REQUIRED COMPONENTS
         roscpp
-        rospy
         std_msgs
         geometry_msgs
         nav_msgs
@@ -12,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
         tf2
         tf2_ros
         dynamic_reconfigure
+        #message_filters
         )
 
 add_message_files(
@@ -30,6 +30,7 @@ generate_messages(
         geometry_msgs
         nav_msgs
         sensor_msgs
+        #message_filters
 )
 
 generate_dynamic_reconfigure_options(
@@ -56,4 +57,8 @@ add_dependencies(odometry ${catkin_EXPORTED_TARGETS})
 
 add_executable(wheel_speeds src/wheel_speeds.cpp)
 target_link_libraries(wheel_speeds ${catkin_LIBRARIES})
-add_dependencies(wheel_speeds ${catkin_LIBRARIES})
+add_dependencies(wheel_speeds ${catkin_EXPORTED_TARGETS})
+
+add_executable(calibrator src/estimator_for_calibration.cpp)
+target_link_libraries(calibrator ${catkin_LIBRARIES})
+add_dependencies(calibrator ${catkin_EXPORTED_TARGETS})

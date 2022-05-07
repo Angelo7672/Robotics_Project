@@ -3,18 +3,18 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Header.h>
 
-#define WHEEL_RADIUS 0.07
-#define WHEEL_POSITION_ALONG_X 0.200
-#define WHEEL_POSITION_ALONG_Y 0.169
+#define WHEEL_RADIUS /*0.07*/ 0.07
+#define WHEEL_POSITION_ALONG_X /*0.200*/ 0.090
+#define WHEEL_POSITION_ALONG_Y /*0.169*/ 0.070
 #define GEAR_RATIO 5
-#define ENCODERS_RESOLUTION 42
+#define ENCODERS_RESOLUTION /*42*/ 40
 
 class kinematics_tick{
 public:
     kinematics_tick(){
         this->first_pub = this->n.advertise<std_msgs::Header>("first", 1000);
         this->kinematics_pub = this->n.advertise<geometry_msgs::TwistStamped>("cmd_vel", 1000);
-        this->first = false;
+        this->first = true;
     }
 
     void initialization(double front_left, double front_right, double rear_left, double rear_right, ros::Time time){
@@ -31,7 +31,7 @@ public:
         this->rear_left_ticks = rear_left;
         this->rear_right_ticks = rear_right;
 
-        this->first = true;  //dopo il primo giro sara' sempre a true
+        this->first = false;  //dopo il primo giro sara' sempre a false
     }
 
     void kinematics(double front_left_velocity, double front_right_velocity, double rear_left_velocity, double rear_right_velocity, ros::Time new_time){
@@ -48,10 +48,6 @@ public:
         u_2 = ((front_right_velocity - front_right_ticks) / ((new_time - time).toSec())) * (double)(1.0 / GEAR_RATIO) * (double )(1.0 / ENCODERS_RESOLUTION) * (2.0 * pi);
         u_3 = ((rear_left_velocity - rear_left_ticks) / ((new_time - time).toSec())) * (double)(1.0 / GEAR_RATIO) * (double)(1.0 / ENCODERS_RESOLUTION) * (2.0 * pi);
         u_4 = ((rear_right_velocity - rear_right_ticks) / ((new_time - time).toSec())) * (double)(1.0 / GEAR_RATIO) * (double)(1.0 / ENCODERS_RESOLUTION) * (2.0 * pi);
-
-        /*v_x = (WHEEL_RADIUS / 2) * (u_1 + u_2);
-        v_y = (WHEEL_RADIUS / 2) * (u_2 - u_3);
-        w = - (WHEEL_RADIUS / 2) * ((u_1 - u_3) / (WHEEL_POSITION_ALONG_Y + WHEEL_POSITION_ALONG_X));*/
 
         v_x = (u_1 + u_2 + u_3 + u_4) * (WHEEL_RADIUS / 4);
         v_y = (-u_1 + u_2 + u_3 - u_4) * (WHEEL_RADIUS / 4);
@@ -77,7 +73,7 @@ public:
     }
 
     void wheel_statesCallback(const sensor_msgs::JointState::ConstPtr& msg) {
-        if(first) {
+        if(!first) {
             kinematics(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
         } else {    //durante il primo giro perche' per calcolare la velocita' ci servono due misure
             initialization(msg->position[0], msg->position[1], msg->position[2], msg->position[3], msg->header.stamp);
@@ -92,10 +88,10 @@ private:
     ros::Publisher kinematics_pub;
 
     ros::Time time;
-    float front_left_ticks;
-    float front_right_ticks;
-    float rear_left_ticks;
-    float rear_right_ticks;
+    double front_left_ticks;
+    double front_right_ticks;
+    double rear_left_ticks;
+    double rear_right_ticks;
 
     bool first;
 };
