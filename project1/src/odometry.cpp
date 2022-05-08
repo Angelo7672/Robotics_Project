@@ -168,7 +168,6 @@ int main(int argc, char **argv) {
     my_odometry.set_y_k(y_0);
     my_odometry.set_theta_k(yaw);
 
-
     ros::Subscriber first_sub = n.subscribe("first", 1000, &odometry_class::first_Callback, &my_odometry);
     ros::Subscriber kinematics_sub = n.subscribe("cmd_vel", 1000, &odometry_class::cmd_velCallback, &my_odometry);
 

@@ -1,12 +1,12 @@
 <launch>
 
     <!-- bag1 -->
-    <!--<param name="x_0" type="double" value="0.00815962441266"/>
+    <param name="x_0" type="double" value="0.00815962441266"/>
     <param name="y_0" type="double" value="0.003059721319"/>
     <param name="quat_x" type="double" value="-0.011577633209526539"/>
     <param name="quat_y" type="double" value="-0.02075166068971157"/>
     <param name="quat_z" type="double" value="-0.019595127552747726"/>
-    <param name="quat_w" type="double" value="0.9995256066322327"/>-->
+    <param name="quat_w" type="double" value="0.9995256066322327"/>
     <!-- bag2 -->
     <!--<param name="x_0" type="double" value="0.0242218170315"/>
     <param name="y_0" type="double" value="0.00374252465554"/>
@@ -15,12 +15,12 @@
     <param name="quat_z" type="double" value="-0.0028051661793142557"/>
     <param name="quat_w" type="double" value="0.997876763343811"/>-->
     <!-- bag3 -->
-    <param name="x_0" type="double" value="0.00546012399718"/>
+    <!--<param name="x_0" type="double" value="0.00546012399718"/>
     <param name="y_0" type="double" value="0.0399703718722"/>
     <param name="quat_x" type="double" value="-0.010593205690383911"/>
     <param name="quat_y" type="double" value="-0.024768192321062088"/>
     <param name="quat_z" type="double" value="-0.006751589477062225"/>
-    <param name="quat_w" type="double" value="0.9996143579483032"/>
+    <param name="quat_w" type="double" value="0.9996143579483032"/>-->
 
     <node pkg="project1" type="kinematics" name="kinematics"/>
     <node pkg="project1" type="odometry" name="odometry"/>

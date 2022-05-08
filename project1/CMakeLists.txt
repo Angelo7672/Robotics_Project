@@ -11,12 +11,13 @@ find_package(catkin REQUIRED COMPONENTS
         tf2
         tf2_ros
         dynamic_reconfigure
-        #message_filters
+        message_filters
         )
 
 add_message_files(
         FILES
         Rpm.msg
+        Calibration.msg
 )
 
 add_service_files(
@@ -38,7 +39,10 @@ generate_dynamic_reconfigure_options(
 )
 
 catkin_package(
-        CATKIN_DEPENDS message_runtime
+        CATKIN_DEPENDS
+        roscpp
+        message_runtime
+        message_filters
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})

@@ -1,23 +1,28 @@
 #include "ros/ros.h"
 #include <geometry_msgs/TwistStamped.h>
 #include "project1/Rpm.h"
+#include "project1/Calibration.h"
 
-#define WHEEL_RADIUS /*0.07*/ 0.10
-#define WHEEL_POSITION_ALONG_X /*0.200*/ 0.070
-#define WHEEL_POSITION_ALONG_Y /*0.169*/ 0.070
-#define ENCODERS_RESOLUTION /*42*/ 30
+#define WHEEL_RADIUS 0.07
+#define WHEEL_POSITION_ALONG_X 0.200
+#define WHEEL_POSITION_ALONG_Y 0.169
+#define ENCODERS_RESOLUTION 42
 
 class wheel_speeds{
 public:
     wheel_speeds(){
-        this->rpm_pub = this->n.advertise<project1::Rpm>("wheels_rpm",1000);
+        this->rpm_pub = this->nh.advertise<project1::Rpm>("wheels_rpm",1000);
+        this->r = WHEEL_RADIUS;
+        this->n = ENCODERS_RESOLUTION;
+        this->w = WHEEL_POSITION_ALONG_Y;
+        this->l = WHEEL_POSITION_ALONG_X;
     }
 
-    void calculateRpm(double v_x, double v_y, double w, ros::Time time){
-        rpm_fl = ((1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x - v_y)) * 9.549297;
-        rpm_fr = ((1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x + v_y)) * 9.549297;
-        rpm_rl = ((1/WHEEL_RADIUS) * ((WHEEL_POSITION_ALONG_X + WHEEL_POSITION_ALONG_Y) * w + v_x - v_y)) * 9.549297;
-        rpm_rr = ((1/WHEEL_RADIUS) * ((-WHEEL_POSITION_ALONG_X - WHEEL_POSITION_ALONG_Y) * w + v_x + v_y)) * 9.549297;
+    void calculateRpm(double v_x, double v_y, double w_z, ros::Time time){
+        rpm_fl = ((1/r) * ((-l - w) * w_z + v_x - v_y)) * 9.549297;
+        rpm_fr = ((1/r) * ((l + w) * w_z + v_x + v_y)) * 9.549297;
+        rpm_rl = ((1/r) * ((l + w) * w_z + v_x - v_y)) * 9.549297;
+        rpm_rr = ((1/r) * ((-l - w) * w_z + v_x + v_y)) * 9.549297;
 
         // generate  msg
         project1::Rpm rpm_msg;
@@ -36,14 +41,26 @@ public:
         calculateRpm(msg->twist.linear.x,msg->twist.linear.y,msg->twist.angular.z,msg->header.stamp);
     }
 
+    void calibrationCallback(const project1::Calibration::ConstPtr& msg){
+        this->r = msg->r;
+        this->n = msg->n;
+        this->l = msg->l;
+        this->w = msg->w;
+    }
+
 private:
-    ros::NodeHandle n;
+    ros::NodeHandle nh;
     ros::Publisher rpm_pub;
 
     double rpm_fl;
     double rpm_fr;
-    double rpm_rr;
     double rpm_rl;
+    double rpm_rr;
+
+    double r;
+    double n;
+    double l;
+    double w;
 };
 
 int main(int argc, char **argv){
@@ -53,6 +70,7 @@ int main(int argc, char **argv){
     wheel_speeds my_rpm;
 
     ros::Subscriber cmd_vel_sub = n.subscribe("cmd_vel", 1000, &wheel_speeds::cmd_velCallback, &my_rpm);
+    ros::Subscriber calibration_sub = n.subscribe("calibration", 1000, &wheel_speeds::calibrationCallback, &my_rpm);
 
     ros::spin();     //solo ROS, e' piu' efficiente perche' non considera ulteriori funzioni
 
