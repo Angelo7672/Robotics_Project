@@ -22,7 +22,6 @@ public:
         this->w = WHEEL_POSITION_ALONG_Y;
         this->n = ENCODERS_RESOLUTION;
         this->r = WHEEL_RADIUS;
-        this->count = 0;
 
         this->calibration_pub = this->nh.advertise<project1::Calibration>("calibration", 1000);
     }
@@ -95,17 +94,13 @@ public:
 
         ROS_INFO("New R: %f N: %f l: %f w: %f", r, n, l , w);
 
-        count++;
-        if(count == 5000){
-            project1::Calibration calibration_msg;
+        project1::Calibration calibration_msg;
+        calibration_msg.r = this->r;
+        calibration_msg.n = this->n;
+        calibration_msg.w = this->w;
+        calibration_msg.l = this->l;
 
-            calibration_msg.r = this->r;
-            calibration_msg.n = this->n;
-            calibration_msg.w = this->w;
-            calibration_msg.l = this->l;
-
-            calibration_pub.publish(calibration_msg);
-        }
+        calibration_pub.publish(calibration_msg);
     }*/
 
 private:
@@ -116,8 +111,6 @@ private:
     double l;
     double w;
     double r;
-
-    int count;
 };
 
 int main(int argc, char **argv) {
