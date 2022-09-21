@@ -12,10 +12,10 @@ class wheel_speeds{
 public:
     wheel_speeds(){
         this->rpm_pub = this->nh.advertise<project1::Rpm>("wheels_rpm",1000);
-        this->r = WHEEL_RADIUS;
-        this->n = ENCODERS_RESOLUTION;
-        this->w = WHEEL_POSITION_ALONG_Y;
-        this->l = WHEEL_POSITION_ALONG_X;
+        this->r = 0.077/*WHEEL_RADIUS*/;
+        this->n = 43/*ENCODERS_RESOLUTION*/;
+        this->w = 0.17/*WHEEL_POSITION_ALONG_Y*/;
+        this->l = 0.18/*WHEEL_POSITION_ALONG_X*/;
     }
 
     void calculateRpm(double v_x, double v_y, double w_z, ros::Time time){

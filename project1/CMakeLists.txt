@@ -31,7 +31,6 @@ generate_messages(
         geometry_msgs
         nav_msgs
         sensor_msgs
-        #message_filters
 )
 
 generate_dynamic_reconfigure_options(
@@ -42,6 +41,9 @@ catkin_package(
         CATKIN_DEPENDS
         roscpp
         message_runtime
+        geometry_msgs
+        nav_msgs
+        sensor_msgs
         message_filters
 )
 
