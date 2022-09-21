@@ -1,4 +1,4 @@
-Files inside the Project:
+# Files inside the Project:
 
 cfg: folder that contains the cfg file needed for the dynamic reconfiguration of the integration method, choosen between Euler’s and Runge-Kutta’s 
 approximations.
